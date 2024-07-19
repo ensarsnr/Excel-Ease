@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import * as XLSX from "xlsx";
 import "bootstrap/dist/css/bootstrap.min.css";
+import "bootstrap/dist/js/bootstrap.bundle.min"; // Bootstrap JS ve bağımlılıkları dahil edin
 import "./App.css";
 import services from "./services";
 
 function App() {
   const [__html, setHTML] = useState("");
   const [jsonExcel, setJsonExcel] = useState(null);
+  const [errorValid, setErrorValid] = useState(true);
 
-  // Dosya seçme işlevi burada oluyor..
-  // Valid eklenmesi lazım sadece excel dosyalarını alması için.
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
     const data = await file.arrayBuffer();
@@ -17,15 +17,45 @@ function App() {
     const wb = XLSX.read(data);
     const ws = wb.Sheets[wb.SheetNames[0]];
 
-    // Json formatında veriyi al
     const json = XLSX.utils.sheet_to_json(ws);
     setHTML(XLSX.utils.sheet_to_html(ws, { id: "tabeller" }));
     setJsonExcel(json);
   };
 
-  const handleClick = () => {
-    console.log(jsonExcel);
-    services.uploadJsonExcel(jsonExcel);
+  // Modal gösteren fonksiyon
+  const handleOpenModal = () => {
+    console.log(jsonExcel)
+    if (!jsonExcel) {
+
+      setErrorValid(false)
+      console.log("Burada")
+      }
+
+    else {
+      const modal = new window.bootstrap.Modal(
+        document.getElementById("exampleModal")
+      );
+      modal.show();
+      setErrorValid(true);
+    }
+  };
+
+  const handleReqJsonData = async () => {
+    try {
+      console.log(`jsonExcel: ${JSON.stringify(jsonExcel)}`);
+      const response = await services.uploadJsonExcel(jsonExcel);
+
+      if (response && response.data) {
+        console.log(`Response data: ${response.data}`);
+        setErrorValid(true);
+      } else {
+        console.log("No response data or error occurred.");
+        setErrorValid(false);
+      }
+    } catch (error) {
+      console.log(`Handle error: ${error}`);
+      setErrorValid(false);
+    }
   };
 
   return (
@@ -45,17 +75,68 @@ function App() {
       </div>
       {/* HTML önizlemesi */}
       <div className="table-responsive d-flex justify-between">
-        <div
-          className="w-100 table table-bordered m-auto"
-          dangerouslySetInnerHTML={{ __html }}
-        />
+        {errorValid ? (
+          <div
+            className="w-100 table table-bordered m-auto"
+            dangerouslySetInnerHTML={{ __html }}
+          />
+        ) : (
+          <div className="w-100 text-danger text-center m-auto">
+            Lütfen doğru dosya seçin.
+          </div>
+        )}
         <div className="text-center w-100 d-flex">
           <button
-            onClick={handleClick}
+            onClick={handleOpenModal}
             className="btn btn-warning text-light font-weight-bold d-flex m-auto align-middle w-50"
           >
-            <span className="d-flex m-auto">İşlemek için tıkla</span>
+            <span className="d-flex m-auto">Dosyayı işle</span>
           </button>
+        </div>
+      </div>
+
+      {/* Modal */}
+      <div
+        className="modal fade"
+        id="exampleModal"
+        tabIndex="-1"
+        role="dialog"
+        aria-labelledby="exampleModalLabel"
+        aria-hidden="true"
+      >
+        <div className="modal-dialog" role="document">
+          <div className="modal-content">
+            <div className="modal-header">
+              <h5 className="modal-title" id="exampleModalLabel">
+                Uyarı
+              </h5>
+              <button
+                type="button"
+                className="close"
+                data-dismiss="modal"
+                aria-label="Close"
+              >
+                <span aria-hidden="true">×</span>
+              </button>
+            </div>
+            <div className="modal-body">Bu dosyayı işlemek istediğinize emin misiniz?</div>
+            <div className="modal-footer">
+              <button
+                type="button"
+                className="btn btn-danger"
+                data-dismiss="modal"
+              >
+                İptal et
+              </button>
+              <button
+                onClick={handleReqJsonData}
+                type="button"
+                className="btn btn-success"
+              >
+                Evet
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
