@@ -20,15 +20,14 @@ function App() {
     const json = XLSX.utils.sheet_to_json(ws);
     setHTML(XLSX.utils.sheet_to_html(ws, { id: "tabeller" }));
     setJsonExcel(json);
+    setErrorValid(true);
   };
 
   // Modal gösteren fonksiyon
   const handleOpenModal = () => {
-    console.log(jsonExcel)
     if (!jsonExcel) {
 
       setErrorValid(false)
-      console.log("Burada")
       }
 
     else {
@@ -44,7 +43,7 @@ function App() {
     try {
       console.log(`jsonExcel: ${JSON.stringify(jsonExcel)}`);
       const response = await services.uploadJsonExcel(jsonExcel);
-
+      
       if (response && response.data) {
         console.log(`Response data: ${response.data}`);
         setErrorValid(true);
@@ -132,6 +131,7 @@ function App() {
                 onClick={handleReqJsonData}
                 type="button"
                 className="btn btn-success"
+                data-dismiss="modal"
               >
                 Evet
               </button>
