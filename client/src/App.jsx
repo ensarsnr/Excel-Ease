@@ -26,11 +26,8 @@ function App() {
   // Modal gösteren fonksiyon
   const handleOpenModal = () => {
     if (!jsonExcel) {
-
-      setErrorValid(false)
-      }
-
-    else {
+      setErrorValid(false);
+    } else {
       const modal = new window.bootstrap.Modal(
         document.getElementById("exampleModal")
       );
@@ -43,7 +40,12 @@ function App() {
     try {
       console.log(`jsonExcel: ${JSON.stringify(jsonExcel)}`);
       const response = await services.uploadJsonExcel(jsonExcel);
-      
+
+      const downloadButtonDom = document.querySelector("#downloadButton");
+      downloadButtonDom.classList.remove("btn-secondary");
+      downloadButtonDom.classList.remove("disabled");
+      downloadButtonDom.classList.add("btn-danger");
+
       if (response && response.data) {
         console.log(`Response data: ${response.data}`);
         setErrorValid(true);
@@ -55,6 +57,10 @@ function App() {
       console.log(`Handle error: ${error}`);
       setErrorValid(false);
     }
+  };
+
+  const handleDownloadExcel = async () => {
+    await services.downloadExcel();
   };
 
   return (
@@ -84,12 +90,19 @@ function App() {
             Lütfen doğru dosya seçin.
           </div>
         )}
-        <div className="text-center w-100 d-flex">
+        <div className="text-center gap-2 w-100 d-flex">
           <button
             onClick={handleOpenModal}
             className="btn btn-warning text-light font-weight-bold d-flex m-auto align-middle w-50"
           >
-            <span className="d-flex m-auto">Dosyayı işle</span>
+            <span className="d-flex m-auto ">Dosyayı işle</span>
+          </button>
+          <button
+            onClick={handleDownloadExcel}
+            id="downloadButton"
+            className="disabled btn btn-secondary w-50 m-auto text-light font-weight-bold"
+          >
+            İndir
           </button>
         </div>
       </div>
@@ -118,7 +131,9 @@ function App() {
                 <span aria-hidden="true">×</span>
               </button>
             </div>
-            <div className="modal-body">Bu dosyayı işlemek istediğinize emin misiniz?</div>
+            <div className="modal-body">
+              Bu dosyayı işlemek istediğinize emin misiniz?
+            </div>
             <div className="modal-footer">
               <button
                 type="button"
